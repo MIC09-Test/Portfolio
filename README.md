@@ -8,7 +8,7 @@ about, experience, certifications, contact. A small figure is asleep at a desk
 in the footer.
 
 Flip the switch beside the name and the room goes dark. The figure wakes up,
-picks up a torch, and the page becomes somewhere to climb — because **every
+picks up a torch, and the page becomes somewhere to climb because **every
 ledge in the cave is a real line of text measured out of the live DOM.** The
 top edge of a heading is a platform. So is each line of a paragraph, each skill
 chip, each link pill. Nothing is authored twice: change a sentence in
@@ -19,7 +19,7 @@ torch. (Esc, or the ☀ button on a phone, is there for anyone who came to read
 a CV and not to platform for one.)
 
 Built with **TypeScript + Vite + HTML5 Canvas**. No frameworks, no libraries,
-no image assets — the character, the desk, and the darkness are all drawn in
+no image assets the character, the desk, and the darkness are all drawn in
 code.
 
 ## How the two modes stay in sync
@@ -64,7 +64,7 @@ npm run deploy   # build and publish dist/ to the gh-pages branch
 
 ## Editing the content
 
-All visitor-facing text lives in [`src/content.ts`](src/content.ts) — profile,
+All visitor-facing text lives in [`src/content.ts`](src/content.ts) profile,
 about, skills, projects, experience, certifications, contact. It is the only
 file you need to touch to update the portfolio; the layout, the platforms and
 the climb all follow from it.
