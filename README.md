@@ -1,4 +1,4 @@
-# Portfolio — the page is the cave
+# Portfolio: the page is the cave
 
 A personal portfolio that reads as an ordinary page, until you turn the lights
 off.
@@ -19,7 +19,7 @@ torch. (Esc, or the ☀ button on a phone, is there for anyone who came to read
 a CV and not to platform for one.)
 
 Built with **TypeScript + Vite + HTML5 Canvas**. No frameworks, no libraries,
-no image assets the character, the desk, and the darkness are all drawn in
+no image assets: the character, the desk, and the darkness are all drawn in
 code.
 
 ## How the two modes stay in sync
@@ -30,7 +30,7 @@ instead of the scrollbar. That constraint drives most of the design:
 
 - Platform geometry is measured with `offsetTop` / `offsetLeft`, so anything
   that only changes **paint** is safe (`opacity`, `color`, `text-shadow`), and
-  anything that changes **layout or the containing block** is not — a
+  anything that changes **layout or the containing block** is not. A
   `transform` or a `filter` on a measured element moves the ground under the
   character's feet.
 - Per-line ledges come from `Range.getClientRects()`, which returns one rect
@@ -38,14 +38,14 @@ instead of the scrollbar. That constraint drives most of the design:
   styled letters inside it becomes five separate stepping stones.
 - The lit page and the cave must have identical element heights. That is why
   the note taped by the switch is hidden with `visibility` rather than
-  `display` — removing it from flow would shift every platform below it.
+  `display`: removing it from flow would shift every platform below it.
 
 ## Controls (lights off)
 
 | Key | Does |
 | --- | --- |
 | **← →** / **A D** | walk |
-| **↑** / **W** / **Space** | jump — ledges are one-way, you pass up through them |
+| **↑** / **W** / **Space** | jump (ledges are one-way, you pass up through them) |
 | **↓** / **S** | drop through the ledge you are standing on |
 | **Esc** | turn the lights back on from anywhere |
 
@@ -64,7 +64,7 @@ npm run deploy   # build and publish dist/ to the gh-pages branch
 
 ## Editing the content
 
-All visitor-facing text lives in [`src/content.ts`](src/content.ts) profile,
+All visitor-facing text lives in [`src/content.ts`](src/content.ts): profile,
 about, skills, projects, experience, certifications, contact. It is the only
 file you need to touch to update the portfolio; the layout, the platforms and
 the climb all follow from it.
@@ -73,12 +73,12 @@ the climb all follow from it.
 
 | File | What it does |
 | --- | --- |
-| `src/content.ts` | All portfolio text — the only file to edit for content |
+| `src/content.ts` | All portfolio text, the only file to edit for content |
 | `src/main.ts` | Builds the page from the content, wires the lights switch, scroll reveals |
 | `src/style.css` | Everything visual in both modes |
 | `src/game/engine.ts` | Measures the DOM into platforms, runs the cave loop and camera |
 | `src/game/player.ts` | Walk/jump/drop physics against one-way ledges |
-| `src/game/figure.ts` | The character, drawn in code — same proportions in both modes |
+| `src/game/figure.ts` | The character, drawn in code with the same proportions in both modes |
 | `src/game/desk.ts` | The desk, one geometry with a lit and an unlit palette |
 | `src/game/sleeper.ts` | The footer scene: him asleep at that desk with the lights on |
 | `src/game/lighting.ts` | The darkness, the torchlight, the embers on distant headings |
