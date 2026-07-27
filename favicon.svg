@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ML">
+  <!-- White plate rather than the yellow the mark was drawn on: the lit page
+       is the default, and the tab should agree with it. -->
+  <rect width="64" height="64" fill="#ffffff"/>
+  <!-- The ML monogram as two strokes. Drawn as geometry rather than traced
+       from the sketch on purpose: a favicon is painted at 16px, where the
+       hand-drawn roughness is smaller than a pixel and only reads as mud.
+       The proportions are the sketch's — wide M, narrow L, common baseline. -->
+  <g fill="none" stroke="#141414" stroke-width="5.5"
+     stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M8 49 L12 15 L20 38 L28 15 L33 49"/>
+    <path d="M41 15 L43 48 L57 46"/>
+  </g>
+</svg>

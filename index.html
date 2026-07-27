@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="description" content="Portfolio of Michael Lim" />
+    <!-- The page loads lit. Saying "dark" here made the browser paint a dark
+         backdrop before the stylesheet arrived, and dress the scrollbar to
+         match it on a white page. The cave doesn't scroll, so light is the
+         only mode with a scrollbar to style. -->
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <title>Yo! Michael here.</title>
+    <script type="module" crossorigin src="./assets/index-ba_tfoH3.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CHjNW5eE.css">
+  </head>
+  <body>
+    <div id="world">
+      <main id="app"></main>
+    </div>
+
+    <!-- Platforms render behind the text, the explorer in front of it,
+         and the darkness above everything. All ignore the pointer. -->
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <canvas id="actor" aria-hidden="true"></canvas>
+    <canvas id="light" aria-hidden="true"></canvas>
+
+    <!-- The lights switch is not here: it lives in the page, beside his
+         name, because in the cave it has to be somewhere he can reach. -->
+    <div id="hint">
+      ← → walk &nbsp;·&nbsp; ↑ jump &nbsp;·&nbsp; ↓ descend &nbsp;·&nbsp; esc for lights
+    </div>
+
+    <div id="touch-controls">
+      <div class="tc-group">
+        <button id="btn-left" aria-label="Walk left">◀</button>
+        <button id="btn-right" aria-label="Walk right">▶</button>
+      </div>
+      <div class="tc-group">
+        <button id="btn-down" aria-label="Descend">▼</button>
+        <button id="btn-jump" aria-label="Jump">▲</button>
+      </div>
+    </div>
+
+    <!-- A phone has no Esc key, so the lifeline needs a button of its own, or
+         a visitor who taps the switch out of curiosity is stuck in a dark
+         room with a platformer they did not ask for. Far corner from the
+         thumb pad, so it is never caught mid-jump. -->
+    <button id="btn-lights" type="button" aria-label="Turn the lights back on">
+      ☀
+    </button>
+
+  </body>
+</html>
