@@ -68,9 +68,11 @@ export interface Project {
 
 export const PROJECTS: Project[] = [
   {
-    title: "ManPro: HR Management System",
+    // Scoped deliberately. ManPro is Infinity Hub's product, built by their
+    // team; this card is about the part he worked on, not the whole system.
+    title: "ManPro HRMS: Performance Management Module",
     description:
-      "A full-stack Human Resource Management System built during my internship at Infinity Hub. I owned the Performance Management module: configurable evaluation forms, KPI tracking with multi-reviewer workflows, and an appraisal system with scoring logic, audit logging, and exportable reports.",
+      "An HR management platform built by the team at Infinity Hub, where I interned. My contribution was the Performance Management module: configurable evaluation forms, KPI tracking with multi-reviewer workflows, and an appraisal system with scoring logic, audit logging, and exportable reports.",
     tags: ["Laravel", "React", "MySQL", "Material UI"],
     link: "https://manpro.ph/",
     linkLabel: "Visit manpro.ph",
