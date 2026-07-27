@@ -61,20 +61,28 @@ export interface Project {
   description: string;
   tags: string[];
   link?: string;
+  // What the card says the link goes to. A card that is clickable but does
+  // not name its destination gets clicked by nobody.
+  linkLabel?: string;
 }
 
 export const PROJECTS: Project[] = [
   {
-    title: "ManPro — HR Management System",
+    title: "ManPro: HR Management System",
     description:
       "A full-stack Human Resource Management System built during my internship at Infinity Hub. I owned the Performance Management module: configurable evaluation forms, KPI tracking with multi-reviewer workflows, and an appraisal system with scoring logic, audit logging, and exportable reports.",
     tags: ["Laravel", "React", "MySQL", "Material UI"],
+    link: "https://manpro.ph/",
+    linkLabel: "Visit manpro.ph",
   },
   {
-    title: "WorkingItOut — Gamified Fitness App",
+    title: "WorkingItOut: Gamified Fitness App",
     description:
       "A gamified mobile fitness app for young adults that blends honesty-based self-reporting with a reward-and-badge system to build consistent workout habits. Features real-time tracking, user authentication, cloud storage, and a content-based filtering algorithm for personalized workout recommendations.",
     tags: ["Flutter", "Firebase", "Cloud Firestore"],
+    // No &hl=en: without it the listing renders in the reader's own language.
+    link: "https://play.google.com/store/apps/details?id=app.wiofsl.workingitout",
+    linkLabel: "Get it on Google Play",
   },
 ];
 

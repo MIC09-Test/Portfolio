@@ -123,6 +123,11 @@ app.append(
           el("p", {}, p.description),
           chips(p.tags),
         ];
+        // The whole card is the link, so this is a span, not a nested <a>:
+        // it names the destination without being a second click target.
+        if (p.link && p.linkLabel) {
+          inner.push(el("span", { class: "visit" }, `${p.linkLabel} →`));
+        }
         return p.link
           ? el(
               "a",

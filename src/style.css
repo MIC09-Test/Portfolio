@@ -373,6 +373,16 @@ a.project:hover h3 {
   gap: 6px;
 }
 
+/* Names where the card goes. Same treatment as the Credly line under the
+   certifications, so the two calls to action read as one idea. */
+.project .visit {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--accent);
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(224, 164, 88, 0.4);
+}
+
 .project .chip {
   font-size: 0.75rem;
   padding: 2px 8px;
