@@ -100,10 +100,12 @@ export const EXPERIENCE: Experience[] = [
     role: "Software Developer Intern",
     org: "Infinity Hub",
     period: "2026",
+    // Same scoping as the ManPro project card: name the module, credit the
+    // platform to the company. "Owned" claimed more than an intern should.
     points: [
-      "Owned the Performance Management module of a company-wide HRMS, building configurable evaluation forms and KPI tracking with multi-reviewer workflows and secure file attachments.",
+      "Developed the Performance Management module of ManPro, the company's HR platform: configurable evaluation forms, KPI tracking with multi-reviewer workflows, and secure file attachments.",
       "Built an appraisal system with review periods, scoring logic, audit logging, and exportable reports using Laravel, React, and MySQL.",
-      "Collaborated within a team on backend logic, database design, and API integration across the full application lifecycle.",
+      "Worked alongside the development team on backend logic, database design, and API integration across the full application lifecycle.",
     ],
   },
 ];
