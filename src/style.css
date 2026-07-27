@@ -1,0 +1,950 @@
+/* ============================================================
+   A dark portfolio explored by torchlight. The content is real
+   HTML in a centered column; the character, platforms, and
+   darkness are canvas overlays. "Lights on" mode strips the
+   game away and lets the page scroll like a normal site.
+   ============================================================ */
+
+:root {
+  --bg: #0b0b0e;
+  --text: #e8e6e1;
+  --muted: #9a98a0;
+  --faint: #6b6a72;
+  --accent: #e0a458;
+  --line: rgba(232, 230, 225, 0.09);
+  --card: rgba(232, 230, 225, 0.025);
+  /* Elevation. Light mode casts a shadow; the cave has no ambient light to
+     cast one, so it lifts a card by catching the torch on its edge instead.
+     Same role, same trigger — only the physics of the room differ. */
+  --raise: 0 1px 2px rgba(0, 0, 0, 0.32);
+  --raise-hover: 0 0 0 1px rgba(224, 164, 88, 0.22), 0 8px 22px rgba(0, 0, 0, 0.45);
+
+  /* Bulbs and switch plate. Dead bulbs in a dark room: cold glass, no glow.
+     The lit values live in body.lights-on — that is the whole state change. */
+  --bulb-glass: radial-gradient(circle at 50% 38%, #363640 0%, #24242c 100%);
+  --bulb-cap: #4c4c56;
+  --bulb-glow: 0 0 0 1px rgba(232, 230, 225, 0.14);
+  --plate: #24242b;
+  --plate-edge: rgba(232, 230, 225, 0.17);
+  --plate-sheen: rgba(255, 255, 255, 0.05);
+  --rocker-top: #43434e;
+  --rocker: #35353f;
+  --rocker-sunk: #1a1a20;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  /* Torch mode: the camera moves the world; the page itself never scrolls. */
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#world {
+  position: relative;
+  will-change: transform;
+}
+
+main {
+  max-width: 660px;
+  margin: 0 auto;
+  padding: 0 24px 90px;
+}
+
+::selection {
+  background: rgba(224, 164, 88, 0.28);
+}
+
+a {
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* --- Hero --------------------------------------------------- */
+
+/* A strip of masking tape stuck on the wall beside the switch, marker note
+   and all. It is the only thing on the page that tells you the cave is down
+   there. Said plainly it read as instructions; told not to touch the switch,
+   people touch the switch.
+
+   Torn ends come from the clip-path — the corners are pulled in by a few
+   pixels at uneven heights, which is what a hand-torn end actually looks
+   like. The fibres are the repeating gradient underneath. */
+/* The switch with its note under it. The group is as wide as the tape, which
+   keeps the tape inside the text column at every width — a wider strip would
+   hang off the right edge of a phone and drag a scrollbar in with it. */
+.switch-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.lights-hint {
+  margin: 0;
+  padding: 8px 17px 9px;
+  rotate: -2.4deg;
+  font-family: "Ink Free", "Bradley Hand", "Segoe Print", "Marker Felt",
+    "Comic Sans MS", cursive;
+  font-size: 0.86rem;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: rgba(38, 40, 48, 0.82);
+  background-color: rgba(232, 216, 172, 0.82);
+  background-image: repeating-linear-gradient(
+    92deg,
+    rgba(255, 255, 255, 0.24) 0 2px,
+    rgba(176, 154, 100, 0.12) 2px 4px
+  );
+  box-shadow:
+    0 1px 3px rgba(58, 46, 20, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  clip-path: polygon(
+    7px 0%,
+    100% 4%,
+    calc(100% - 5px) 33%,
+    100% 62%,
+    calc(100% - 3px) 100%,
+    5px 96%,
+    0% 66%,
+    4px 37%,
+    0% 9%
+  );
+}
+
+/* Keeps its space in the cave rather than being removed from flow: the two
+   modes share one layout, and every platform below the hero is measured from
+   it, so a hero that changed height would move the ground. Only the pixels
+   go. The note has done its job by then — you ignored it. */
+body:not(.lights-on) .lights-hint {
+  visibility: hidden;
+}
+
+.hero {
+  padding-top: 96px;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  flex-wrap: wrap;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 7vw, 3.6rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* Each i in his name wears a bulb where its dot should be. The letter itself
+   is left alone — only the tittle changes. Both pieces are opaque and sit
+   right on top of the real dot, so the i reads as dotless with a bulb
+   screwed into it. They are pseudo-elements rather than a filter on the
+   letter: a filter here would make the h1 a containing block, and the h1 is
+   one of the platforms the engine measures with offsetTop. */
+.bulb {
+  position: relative;
+  /* One knob for how high the bulb hangs over the stem. Measured against the
+     glyph: the tittle sits 0.58–0.74em over the baseline and the stem tops
+     out at 0.50em, so the cap wants to land right about there and the glass
+     to sit clear above it. Horizontal needs no nudge — the stem is centred in
+     the i's advance box to within 0.05px, so left:50% is already true. */
+  --bulb-rise: 0.79em;
+}
+
+/* The glass. */
+.bulb::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: var(--bulb-rise);
+  width: 0.3em;
+  height: 0.31em;
+  transform: translateX(-50%);
+  /* Pear, not ball: round over the top, tapering into the cap. */
+  border-radius: 50% 50% 44% 44% / 54% 54% 46% 46%;
+  background: var(--bulb-glass);
+  box-shadow: var(--bulb-glow);
+  pointer-events: none;
+  transition:
+    background 0.5s ease,
+    box-shadow 0.5s ease;
+}
+
+/* The screw cap, bridging glass to stem. */
+.bulb::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--bulb-rise) - 0.06em);
+  width: 0.13em;
+  height: 0.08em;
+  transform: translateX(-50%);
+  border-radius: 0 0 1px 1px;
+  background: var(--bulb-cap);
+  pointer-events: none;
+  transition: background 0.5s ease;
+}
+
+.hero .role {
+  margin: 14px 0 0;
+  color: var(--accent);
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.hero .tagline {
+  margin: 18px 0 0;
+  max-width: 46ch;
+  color: var(--muted);
+}
+
+.hero .meta {
+  margin-top: 8px;
+  color: var(--faint);
+  font-size: 0.85rem;
+}
+
+.link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.link-row a {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.link-row a:hover {
+  color: var(--accent);
+  border-color: rgba(224, 164, 88, 0.5);
+}
+
+/* --- Sections ------------------------------------------------
+   One spacing for both modes. The cave used to hold sections
+   430px apart, which meant toggling the lights reflowed the
+   whole page and made climbing back up impossible on a jump of
+   ~136px. Shared metrics keep every line of text exactly where
+   it was and turn the content platforms into a real ladder. */
+
+section {
+  margin-top: 110px;
+}
+
+.section-label {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.section-label .num {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.section-label h2 {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+  align-self: center;
+}
+
+section p {
+  color: var(--muted);
+  margin: 0 0 16px;
+  max-width: 60ch;
+}
+
+/* --- Skills -------------------------------------------------- */
+
+.skill-group {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 8px 20px;
+  margin-bottom: 18px;
+}
+
+.skill-group .group-label {
+  color: var(--faint);
+  font-size: 0.85rem;
+  padding-top: 4px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.chip:hover {
+  border-color: rgba(224, 164, 88, 0.4);
+  color: var(--accent);
+}
+
+/* --- Projects ------------------------------------------------ */
+
+.project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.project {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px 22px;
+  background: var(--card);
+  box-shadow: var(--raise);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+a.project:hover {
+  border-color: rgba(224, 164, 88, 0.45);
+  color: var(--text);
+  box-shadow: var(--raise-hover);
+}
+
+.project h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+a.project:hover h3 {
+  color: var(--accent);
+}
+
+.project p {
+  margin: 0 0 12px;
+  font-size: 0.92rem;
+}
+
+.project .chips {
+  gap: 6px;
+}
+
+.project .chip {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* --- Experience ---------------------------------------------- */
+
+.xp {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.xp:last-child {
+  border-bottom: none;
+}
+
+.xp .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.xp h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.xp .org {
+  color: var(--accent);
+  font-weight: 400;
+}
+
+.xp .period {
+  color: var(--faint);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.xp ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.xp li {
+  margin-bottom: 4px;
+}
+
+/* --- Certifications ------------------------------------------ */
+
+.cert {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.cert:last-child {
+  border-bottom: none;
+}
+
+.cert .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cert h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.cert .period {
+  color: var(--faint);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.cert-meta {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.cert-verify {
+  display: inline-block;
+  margin-top: 18px;
+  color: var(--accent);
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(224, 164, 88, 0.4);
+}
+
+/* --- Contact / footer ---------------------------------------- */
+
+/* Confirmation that the address is on the clipboard. Reserves its own line
+   whether or not it is showing, so nothing shifts when it appears — the
+   engine measures these lines as platforms and a reflow would move them. */
+.contact .copied {
+  display: block;
+  margin-top: 10px;
+  min-height: 1.2em;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.contact .copied.show {
+  opacity: 1;
+}
+
+/* A button, so the styles a link used to inherit have to be restated here. */
+.contact .email {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid rgba(224, 164, 88, 0.4);
+  color: var(--text);
+  font-family: inherit;
+  font-size: clamp(1.1rem, 3.4vw, 1.5rem);
+  font-weight: 600;
+  line-height: inherit;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.contact .email:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+footer {
+  margin-top: 110px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* --- The desk: the explorer asleep, lights-on only ----------- */
+
+/* Size comes from the shared scene geometry — main.ts writes the
+   real numbers into these custom properties at startup, so the
+   footer desk is drawn at exactly the size the cave draws it. */
+/* Stays in the layout in BOTH modes — only its pixels are hidden in the
+   cave, which draws the same desk itself at the same place. Removing it
+   from flow would shift the footer every time the lights toggled. */
+.desk {
+  --desk-w: 218;
+  --desk-h: 98;
+  display: block;
+  visibility: hidden;
+  width: calc(var(--desk-w) * 1px);
+  max-width: 100%;
+  aspect-ratio: var(--desk-w) / var(--desk-h);
+  margin: 10px auto 0;
+}
+
+body.lights-on .desk {
+  visibility: visible;
+}
+
+/* --- Footing: what lights up under him ------------------------
+   The platforms in the cave ARE the content, so the thing he is standing on
+   is a chip, a heading, a line of prose. engine.ts marks every element it
+   takes a ledge from with .footing, and moves .lit-step to whichever one has
+   his weight. Paint only — no filter, no transform: a filter would make the
+   element a containing block and shift the very ledge he is standing on. */
+
+body:not(.lights-on) .footing {
+  transition:
+    color 0.55s ease,
+    border-color 0.55s ease,
+    background-color 0.55s ease,
+    box-shadow 0.55s ease,
+    text-shadow 0.55s ease;
+}
+
+body:not(.lights-on) .footing.lit-step {
+  color: #ffffff;
+  text-shadow: 0 0 16px rgba(255, 244, 224, 0.6);
+  /* Snap on under his feet, then fade slowly once he steps off. */
+  transition-duration: 0.08s;
+}
+
+/* Chips and link pills are drawn objects, so the whole tile lights. Plain
+   text gets no background: a paragraph's box is the full column width, and
+   filling that would light a slab the size of the page rather than a line. */
+body:not(.lights-on) .chip.lit-step,
+body:not(.lights-on) .link-row a.lit-step {
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 22px rgba(255, 240, 210, 0.3);
+}
+
+/* --- Game overlays ------------------------------------------- */
+
+#scene,
+#actor,
+#light {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  pointer-events: none;
+}
+
+#scene {
+  z-index: 1;
+}
+
+#world {
+  position: relative;
+  z-index: 2;
+}
+
+#actor {
+  z-index: 3;
+}
+
+#light {
+  z-index: 4;
+}
+
+#hint {
+  position: fixed;
+  z-index: 5;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  color: #77757e;
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  opacity: 0.9;
+  pointer-events: none;
+  transition: opacity 1.5s ease;
+}
+
+/* --- The switch ----------------------------------------------
+   A plate on the wall beside his name, wired to the bulbs in it.
+   It sits in the page rather than pinned to a corner because in
+   the cave it has to be somewhere the explorer can reach. */
+
+.switch {
+  display: inline-flex;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* The wall plate: a screwless faceplate with a rocker in it, the shape
+   that is on the wall of most rooms. */
+.switch .plate {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 66px;
+  flex: none;
+  border-radius: 8px;
+  background: var(--plate);
+  border: 1px solid var(--plate-edge);
+  box-shadow:
+    var(--raise),
+    inset 0 1px 0 var(--plate-sheen);
+  transition:
+    background 0.5s ease,
+    border-color 0.2s ease;
+}
+
+.switch:hover .plate {
+  border-color: rgba(224, 164, 88, 0.55);
+}
+
+/* The rocker. A real one pivots on its middle: press the top and the top
+   stays sunk while the bottom stands proud. So the paddle never moves as a
+   block — the light just swaps ends. Off is bottom-sunk, the resting state
+   of every switch in the house. */
+.switch .lever {
+  position: relative;
+  width: 30px;
+  height: 50px;
+  border-radius: 4px;
+  border: 1px solid var(--plate-edge);
+  background: linear-gradient(
+    180deg,
+    var(--rocker-top),
+    var(--rocker) 56%,
+    var(--rocker-sunk)
+  );
+  box-shadow: inset 0 -13px 13px -10px rgba(0, 0, 0, 0.55);
+  transition:
+    box-shadow 0.22s ease,
+    background 0.35s ease;
+}
+
+body.lights-on .switch .lever {
+  background: linear-gradient(
+    0deg,
+    var(--rocker-top),
+    var(--rocker) 56%,
+    var(--rocker-sunk)
+  );
+  box-shadow: inset 0 13px 13px -10px rgba(0, 0, 0, 0.55);
+}
+
+/* In the cave it stops being a control. The pointer comes off it so it
+   cannot be clicked from the page; the only way to throw it is to climb up
+   and knock it with the torch. (main.ts guards the click too — this is the
+   cursor telling the truth, not the enforcement.) */
+body:not(.lights-on) .switch {
+  pointer-events: none;
+  cursor: default;
+}
+
+/* And the same for the rest of the page. In the cave the content is the
+   floor, not a document: under 95% darkness you cannot see what you would
+   be clicking, so a click down there is an accident by definition — and an
+   accidental mailto: throws a phone out to its mail app mid-climb. The lit
+   page is where you click things; this is where you stand on them. */
+body:not(.lights-on) #app a,
+body:not(.lights-on) #app button {
+  pointer-events: none;
+  cursor: default;
+}
+
+/* --- Touch controls: hidden unless JS detects a touch device -- */
+
+#touch-controls {
+  display: none;
+  position: fixed;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 20px;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body.touch:not(.lights-on) #touch-controls {
+  display: flex;
+}
+
+body.touch #hint {
+  bottom: 116px;
+  max-width: min(320px, 86vw);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* The touch lifeline. Esc is the way out on a keyboard; this is the way out
+   without one. Opposite corner from the thumb pad on purpose — it must never
+   be the button you hit while reaching for jump. */
+#btn-lights {
+  display: none;
+  position: fixed;
+  z-index: 6;
+  top: calc(14px + env(safe-area-inset-top));
+  right: 14px;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(210, 208, 216, 0.22);
+  background: rgba(20, 20, 24, 0.55);
+  color: #b9b7c0;
+  font-size: 18px;
+  line-height: 1;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.touch:not(.lights-on) #btn-lights {
+  display: flex;
+}
+
+#touch-controls .tc-group {
+  display: flex;
+  gap: 14px;
+}
+
+#touch-controls button {
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px solid rgba(210, 208, 216, 0.22);
+  background: rgba(20, 20, 24, 0.55);
+  color: #b9b7c0;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+}
+
+#touch-controls button.held {
+  border-color: rgba(224, 164, 88, 0.75);
+  color: #e0a458;
+  background: rgba(34, 28, 22, 0.6);
+}
+
+/* --- Lights-on mode: a plain, readable, scrollable page ------- */
+
+body.lights-on {
+  --bg: #ffffff;
+  --text: #1b1b1f;
+  --muted: #55545e;
+  --faint: #86858d;
+  --accent: #b5691f;
+  --line: rgba(20, 20, 24, 0.1);
+  --card: rgba(20, 20, 24, 0.03);
+  --raise: 0 1px 2px rgba(20, 20, 24, 0.04);
+  --raise-hover: 0 14px 28px rgba(20, 20, 24, 0.08);
+  /* Current through the filament, and an ivory plate on a pale wall. */
+  /* Hot at the filament, warmer at the glass wall. */
+  --bulb-glass: radial-gradient(circle at 50% 60%, #fff3c6 0%, #ffc94f 55%, #f0a72a 100%);
+  --bulb-cap: #a9a9b3;
+  --bulb-glow:
+    0 0 0 1px rgba(190, 130, 30, 0.35),
+    0 0 0.22em rgba(255, 190, 90, 0.9),
+    0 0 0.55em rgba(255, 172, 60, 0.55);
+  --plate: #eceae4;
+  --plate-edge: rgba(20, 20, 24, 0.22);
+  --plate-sheen: rgba(255, 255, 255, 0.95);
+  --rocker-top: #ffffff;
+  --rocker: #f6f5f1;
+  --rocker-sunk: #c9c7bf;
+  overflow: auto;
+  overscroll-behavior: auto;
+  scroll-behavior: smooth;
+}
+
+/* Reveal-on-scroll, lights-on only. The cave deliberately has none: the
+   darkness canvas already decides what is visible down there, so fading the
+   text underneath it was a second curtain over the first — and it made the
+   pan into the cave play across a blank page, because the camera travels
+   while the torch stays at the desk. In the cave the torch IS the reveal.
+   Respects reduced-motion throughout. */
+@media (prefers-reduced-motion: no-preference) {
+  /* --reveal-dir is flipped to -1 by main.ts for sections re-entering from
+     above, so a reveal always rises or drops with the scroll, not against it. */
+  body.lights-on .reveal {
+    opacity: 0;
+    transform: translateY(calc(28px * var(--reveal-dir, 1)));
+    transition:
+      opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  body.lights-on .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  body.lights-on .project-list .project,
+  body.lights-on .skill-list .skill-group,
+  body.lights-on .xp-list .xp {
+    opacity: 0;
+    transform: translateY(calc(18px * var(--reveal-dir, 1)));
+    transition:
+      opacity 0.55s ease,
+      transform 0.55s ease;
+  }
+
+  body.lights-on .reveal.is-visible .project-list .project,
+  body.lights-on .reveal.is-visible .skill-list .skill-group,
+  body.lights-on .reveal.is-visible .xp-list .xp {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  body.lights-on .project-list .project:nth-child(1),
+  body.lights-on .skill-list .skill-group:nth-child(1),
+  body.lights-on .xp-list .xp:nth-child(1) {
+    transition-delay: 0.05s;
+  }
+
+  body.lights-on .project-list .project:nth-child(2),
+  body.lights-on .skill-list .skill-group:nth-child(2),
+  body.lights-on .xp-list .xp:nth-child(2) {
+    transition-delay: 0.15s;
+  }
+
+  body.lights-on .project-list .project:nth-child(3),
+  body.lights-on .skill-list .skill-group:nth-child(3),
+  body.lights-on .xp-list .xp:nth-child(3) {
+    transition-delay: 0.25s;
+  }
+
+  body.lights-on .project-list .project:nth-child(4),
+  body.lights-on .skill-list .skill-group:nth-child(4),
+  body.lights-on .xp-list .xp:nth-child(4) {
+    transition-delay: 0.35s;
+  }
+}
+
+/* The only effects that stay light-only are the ones that MOVE an element.
+   Card backgrounds, borders, elevation, colour and hover feedback are all
+   shared above; a translate is different, because in the cave these same
+   elements are physical platforms measured at their laid-out position, so
+   nudging one would leave its footing behind. */
+body.lights-on .project {
+  transition:
+    border-color 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+body.lights-on a.project:hover {
+  transform: translateY(-3px);
+}
+
+body.lights-on .link-row a {
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+body.lights-on .link-row a:hover {
+  transform: translateY(-2px);
+}
+
+body.lights-on #world {
+  transform: none !important;
+  height: auto !important;
+}
+
+body.lights-on #scene,
+body.lights-on #actor,
+body.lights-on #light,
+body.lights-on #hint {
+  display: none;
+}
+
+/* ...except while the darkness is still lifting off the newly lit page. */
+body.lights-on.lights-rising #light {
+  display: block;
+}
+
+
+/* Layout metrics are deliberately NOT overridden here — both modes
+   share section spacing, footer spacing, hero padding, and main
+   padding, so the lights toggle never moves a single line of text. */
+
+/* --- Small screens ------------------------------------------- */
+
+@media (max-width: 560px) {
+  .skill-group {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
